@@ -1,4 +1,5 @@
-push!(LOAD_PATH, @__DIR__)
+module Minimization
+export minimize
 
 using LogicalFunctions
 using Base.Iterators: filter as lfilter
@@ -50,7 +51,7 @@ end
 
 
 function to_summation(minterms::Set{PartialBitVector})::Vector{Vector{Int}}
-    skipmissing_values(vec::Vector{Tuple{Int, <:Union{Bool, Missing}}})::Vector{Tuple{Int, Any}} = 
+    skipmissing_values(vec::Vector{<:Union{Tuple{Int, Bool}, Tuple{Int, Missing}}})::Vector{Tuple{Int, Any}} = 
         filter(
             (idx, val)::Tuple -> !ismissing(val),
             vec
@@ -65,17 +66,14 @@ function to_summation(minterms::Set{PartialBitVector})::Vector{Vector{Int}}
 end
 
 
-function main()
-    f(a, b, c, d, e) = !((a || b) ⊻ (c && !d && a) ⊻ (e || d))
-
-    evaluate(f, exhaust(5)) |>
+function minimize(table::TruthTable)::Vector{Vector{Int}}
+    table |> 
         positive |>
         keys |>
-        Set |> 
+        Set |>
         reduce_terms |>
-        to_summation |>
-        display
+        to_summation
 end
 
 
-main()
+end# module
