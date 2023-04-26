@@ -1,16 +1,19 @@
 module Counters
 
+export expressions
+
 using LogicalFunctions
 using Minimization
 
 
 function sequence_to_bits(sequence::Vector{Int})::Vector{BitVector}
-    n_bits =
+    n_bits = 1 + (
         sequence |>
         maximum |>
         log2 |>
-        ceil |>
+        floor |>
         Int
+    )
 
     BitVector.(digits.(sequence, base=2, pad=n_bits))
 end
@@ -35,7 +38,7 @@ function split_columns(trans_table::Vector{Tuple{BitVector, BitVector}})::Dict{I
 end
 
 
-function counter_expressions(sequence::Vector{Int})::Dict{Int, Vector{Vector{Int}}}
+function expressions(sequence::Vector{Int})::Dict{Int, Vector{Vector{Int}}}
     cols = sequence |> 
         sequence_to_bits |> 
         transition |> 
