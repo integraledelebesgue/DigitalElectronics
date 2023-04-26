@@ -1,5 +1,5 @@
 module LogicalFunctions
-export TruthTable, PartialBitVector, hstack, exhaust, evaluate, neighbours, zero_to, find_missing, match_missing, groupby, positive
+export TruthTable, PartialBitVector, hstack, exhaust, gray_code, evaluate, neighbours, zero_to, find_missing, match_missing, groupby, positive
 
 using LinearAlgebra
 
@@ -29,13 +29,28 @@ end
 function exhaust(n::Int)::BitArray
     as_bits(num::Int)::BitVector = BitVector(digits(num, base=2, pad=n))
 
-    base = 2 ^ n - 1
+    base = 1 << n - 1
 
     0:base .|>
         as_bits |>
         hstack |>
         transpose |>
         natural_sort
+end
+
+
+function gray_code(n::Int)::Vector{BitVector}
+    codes = [BitVector([false]), BitVector([true])]
+
+    threshold = 1 << n
+    base = 2
+
+    while base < threshold
+        codes = vcat(pushfirst!.(copy.(codes), 0), pushfirst!.(reverse(codes), 1))
+        base <<= 1
+    end
+
+    codes
 end
 
 
@@ -51,7 +66,7 @@ function neighbours(vals::PartialBitVector)::Vector{PartialBitVector}
     n_vals = length(vals)
     
     as_bits(num::Int)::BitVector = BitVector(digits(num, base=2, pad=n_vals))
-    two_to_pow(x::Int)::Int = 2 ^ x
+    two_to_pow(x::Int)::Int = 1 << x
     new_only(output)::Vector{PartialBitVector} = 
         filter(vec -> !all(vec .=== vals), output)
 

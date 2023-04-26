@@ -19,10 +19,10 @@ function sequence_to_bits(sequence::Vector{Int})::Vector{BitVector}
 end
 
 
-function transition(bit_seq::Vector{BitVector})::Vector{Tuple{BitVector, BitVector}}
+function transition_table(sequence::Vector{BitVector})::Vector{Tuple{BitVector, BitVector}}
     zip(
-        bit_seq[1:end],
-        [bit_seq[2:end]; [bit_seq[1]]]
+        sequence[1:end],
+        [sequence[2:end]; [sequence[1]]]
     ) |> collect
 end
 
@@ -41,7 +41,7 @@ end
 function expressions(sequence::Vector{Int})::Dict{Int, Vector{Vector{Int}}}
     cols = sequence |> 
         sequence_to_bits |> 
-        transition |> 
+        transition_table |> 
         split_columns
 
     Dict([
