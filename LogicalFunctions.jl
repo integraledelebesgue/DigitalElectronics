@@ -1,12 +1,12 @@
 module LogicalFunctions
-export TruthTable, PartialBitVector, hstack, exhaust, gray_code, evaluate, neighbours, zero_to, find_missing, match_missing, groupby, positive
+export TruthTable, PartialBitVector, DNF, hstack, natural_code, gray_code, evaluate, neighbours, zero_to, find_missing, positive, dontcare
 
 using LinearAlgebra
 
 PartialBitVector = Union{BitVector, Vector{Union{Bool, Missing}}}
 TruthTable = Dict{BitVector, Union{Bool, Nothing}}
 MatrixOrAdj = Union{LinearAlgebra.Transpose{Bool, BitMatrix}, BitArray}
-
+DNF = Vector{Vector{Int64}}
 
 function natural_sort(arr::MatrixOrAdj)::BitArray
     sortslices(arr, dims=1)
@@ -26,7 +26,7 @@ function hstack(vecs::Vector{BitVector})::BitArray
 end
 
 
-function exhaust(n::Int)::BitArray
+function natural_code(n::Int)::BitArray
     as_bits(num::Int)::BitVector = BitVector(digits(num, base=2, pad=n))
 
     base = 1 << n - 1
@@ -65,7 +65,7 @@ end
 function neighbours(vals::PartialBitVector)::Vector{PartialBitVector}
     n_vals = length(vals)
     
-    as_bits(num::Int)::BitVector = BitVector(digits(num, base=2, pad=n_vals))
+    to_bits(num::Int)::BitVector = BitVector(digits(num, base=2, pad=n_vals))
     two_to_pow(x::Int)::Int = 1 << x
     new_only(output)::Vector{PartialBitVector} = 
         filter(vec -> !all(vec .=== vals), output)
@@ -73,7 +73,7 @@ function neighbours(vals::PartialBitVector)::Vector{PartialBitVector}
     n_vals - 1 |>
         zero_to .|>
         two_to_pow .|> 
-        as_bits .|>
+        to_bits .|>
         (vec -> vec .⊻ vals) |>
         new_only |>
         unique 
@@ -88,25 +88,17 @@ function find_missing(vec::PartialBitVector)::Vector{Int}
 end
 
 
-function groupby(key::Function, collection::Vector{T})::Dict{Any, Vector{T}} where T
-    groups = key.(collection)
-    buckets = 
-        groups |>
-        unique .|>
-        (group -> group => []) |>
-        Dict
-
-    for (group, value) in zip(groups, collection)
-        push!(buckets[group], value)
-    end
-
-    return buckets
+function positive(table::TruthTable)::TruthTable
+    filter(
+        entry -> entry.second === true,
+        table
+    )
 end
 
 
-function positive(table::TruthTable)::TruthTable
+function dontcare(table::TruthTable)::TruthTable
     filter(
-        entry -> entry.second,
+        entry -> entry.second === nothing,
         table
     )
 end
