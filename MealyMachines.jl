@@ -1,10 +1,12 @@
-push!(LOAD_PATH, @__DIR__)
+module MealyMachines
+export expressions, to_strings
 
-using Base.Iterators: drop, cycle, partition
+using Base.Iterators: drop, cycle, partition, flatten
 using LogicalFunctions, Minimization
-
+using Visualization: formula
 
 TransitionTable = Dict{Vector{Int}, Vector{Int}}
+
 
 function automaton_transition(pattern::BitVector)::TransitionTable
     n = length(pattern)
@@ -66,7 +68,7 @@ function split_columns(table::TransitionTable)::Dict{Int, TruthTable}
 end
 
 
-function expressions(pattern::BitVector)::Dict{Int, Vector{Vector{Int}}}
+function expressions(pattern::BitVector)::Dict{Int, DNF}
     cols = pattern |> 
         automaton_transition |> 
         split_columns
@@ -78,9 +80,38 @@ function expressions(pattern::BitVector)::Dict{Int, Vector{Vector{Int}}}
 end
 
 
-function main()
-    expressions(BitVector([1, 0, 1, 1]))
+function to_strings(exprs::Dict{Int, DNF})::Vector{String}
+    n_funs = exprs |>
+        keys |>
+        length
+
+    n_vars = exprs |>
+        values |>
+        flatten .|>
+        collect |>
+        flatten |>
+        collect .|>
+        abs |>
+        maximum
+
+    state_names = Dict(i => "x$i" for i in 1:n_funs-1)
+    
+    fun_names = merge(
+        state_names, 
+        Dict(n_funs => "out")
+    )
+
+    var_names = merge(
+        state_names,
+        Dict(n_vars => "in")
+    )
+
+    formula.(
+        get.([exprs], 1:n_funs, nothing), 
+        get.([fun_names], 1:n_funs, "?"),
+        [var_names]
+    )
 end
 
 
-main() |> display
+end# module
