@@ -57,14 +57,17 @@ function formula(dnf::Vector{Vector{Int}}, name::String = "f", val_names::Union{
         minterm .|>
         (num -> num < 0 ? "-" : "")
 
+    to_literals(minterm::Vector{Int}) = 
+        join.(
+            zip(
+                signs(minterm),
+                get.([val_names], abs.(minterm), "?")
+            )
+        )
+
     to_conjunction(minterm::Vector{Int})::String = "($(
         join(
-            join.(
-                zip(
-                    signs(minterm),
-                    get.([val_names], abs.(minterm), "?")
-                )
-            ),
+            to_literals(minterm),
             " ∧ "
         )
     ))"
