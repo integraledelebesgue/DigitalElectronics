@@ -57,7 +57,7 @@ function formula(dnf::Vector{Vector{Int}}, name::String = "f", val_names::Union{
         minterm .|>
         (num -> num < 0 ? "-" : "")
 
-    to_literals(minterm::Vector{Int}) = 
+    to_literals(minterm::Vector{Int})::Vector{String} = 
         join.(
             zip(
                 signs(minterm),
