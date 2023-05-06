@@ -59,7 +59,7 @@ function to_strings(exprs::Dict{Int, DNF})::Vector{String}
     exprs |>
     collect |>
     sort_by_first! .|>
-    (expr -> formula(expr.second, "$('a' + expr.first - 1)"))
+    (expr -> formula(expr.second, "x$(expr.first)"))
 end
 
 end# module
