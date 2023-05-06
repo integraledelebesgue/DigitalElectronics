@@ -1,12 +1,13 @@
 module Counters
-
-export expressions
+export expressions, to_strings
 
 using LogicalFunctions
 using Minimization
+using Visualization: formula
 
+TransitionTable = Vector{Tuple{BitVector, BitVector}}
 
-function sequence_to_bits(sequence::Vector{Int})::Vector{BitVector}
+function to_bits(sequence::Vector{Int})::Vector{BitVector}
     n_bits = 1 + (
         sequence |>
         maximum |>
@@ -19,7 +20,7 @@ function sequence_to_bits(sequence::Vector{Int})::Vector{BitVector}
 end
 
 
-function transition_table(sequence::Vector{BitVector})::Vector{Tuple{BitVector, BitVector}}
+function transition_table(sequence::Vector{BitVector})::TransitionTable
     zip(
         sequence[1:end],
         [sequence[2:end]; [sequence[1]]]
@@ -27,20 +28,20 @@ function transition_table(sequence::Vector{BitVector})::Vector{Tuple{BitVector, 
 end
 
 
-function split_columns(trans_table::Vector{Tuple{BitVector, BitVector}})::Dict{Int, TruthTable}
-    n_bits = length(trans_table[1][1])
+function split_columns(table::TransitionTable)::Dict{Int, TruthTable}
+    n_bits = length(table[1][1])
     Dict([
         bit => Dict(map(
             (input, values)::Tuple -> input => values[bit],
-            trans_table
+            table
         )) for bit in 1:n_bits
     ])
 end
 
 
-function expressions(sequence::Vector{Int})::Dict{Int, Vector{Vector{Int}}}
+function expressions(sequence::Vector{Int})::Dict{Int, DNF}
     cols = sequence |> 
-        sequence_to_bits |> 
+        to_bits |> 
         transition_table |> 
         split_columns
 
@@ -48,6 +49,17 @@ function expressions(sequence::Vector{Int})::Dict{Int, Vector{Vector{Int}}}
         digit_fun.first => minimize(digit_fun.second)
         for digit_fun in cols
     ])
+end
+
+
+function to_strings(exprs::Dict{Int, DNF})::Vector{String}
+    sort_by_first!(exprs::Vector{Pair{Int, DNF}})::Vector{Pair{Int, DNF}} = 
+        sort!(exprs, by = element -> element.first)
+
+    exprs |>
+    collect |>
+    sort_by_first! .|>
+    (expr -> formula(expr.second, "$('a' + expr.first - 1)"))
 end
 
 end# module
